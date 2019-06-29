@@ -6,6 +6,10 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 
+/*
+Reads in a file and returns a string.
+Use BsonDocument.parse() method to convert the String to a BsonDocument
+* */
 object BsonImporter {
 
     fun resourceToString(resourcePath: String): String {

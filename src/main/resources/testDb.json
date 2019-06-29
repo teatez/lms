@@ -1,0 +1,17 @@
+{
+  "testCollection": {
+      "testObjectOne": {
+          "testValOne": "value",
+          "testValTwo": "two values"
+      },
+      "testObjectTwo": {
+          "testValOne": "value",
+          "testValTwo": {
+              "poop": "dick",
+              "vagina": {
+                  "lapia" : "smooth"
+                  }
+            }
+        }
+      }
+}
