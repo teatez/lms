@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="4a2a7045-1dc0-4ea7-928b-ab3d85ca3051" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/com/teatez/lms/data/BsonImporter.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/com/teatez/lms/data/BsonImporter.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/out/" />
     <ignored path="$PROJECT_DIR$/.gradle/" />
@@ -36,7 +36,7 @@
         <entry file="file://$PROJECT_DIR$/src/main/kotlin/com/teatez/lms/data/MongoDriver.kt">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="105">
-              <caret line="7" column="66" selection-start-line="7" selection-start-column="66" selection-end-line="7" selection-end-column="66" />
+              <caret line="7" column="49" selection-start-line="7" selection-start-column="49" selection-end-line="7" selection-end-column="49" />
               <folding>
                 <element signature="e#0#60#0" expanded="true" />
               </folding>
@@ -44,7 +44,7 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/kotlin/com/teatez/lms/data/BsonImporter.kt">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="150">
@@ -52,6 +52,15 @@
               <folding>
                 <element signature="e#29#217#0" expanded="true" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/src/main/resources/testDb.json">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="225">
+              <caret line="15" column="6" selection-start-line="15" selection-start-column="6" selection-end-line="15" selection-end-column="6" />
             </state>
           </provider>
         </entry>
@@ -101,9 +110,10 @@
       <list>
         <option value="$PROJECT_DIR$/build.gradle" />
         <option value="$PROJECT_DIR$/src/main/kotlin/MongoDriver.kt" />
-        <option value="$PROJECT_DIR$/src/main/kotlin/com/teatez/lms/data/MongoDriver.kt" />
         <option value="$PROJECT_DIR$/src/main/kotlin/com/teatez/lms/data/JsonToMongoConverter.kt" />
         <option value="$PROJECT_DIR$/src/main/kotlin/com/teatez/lms/data/BsonImporter.kt" />
+        <option value="$PROJECT_DIR$/src/main/kotlin/com/teatez/lms/data/MongoDriver.kt" />
+        <option value="$PROJECT_DIR$/src/main/resources/testDb.json" />
       </list>
     </option>
   </component>
@@ -163,6 +173,13 @@
               <item name="lms" type="462c0819:PsiDirectoryNode" />
               <item name="data" type="462c0819:PsiDirectoryNode" />
             </path>
+            <path>
+              <item name="lms" type="b2602c69:ProjectViewProjectNode" />
+              <item name="lms" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
+              <item name="resources" type="462c0819:PsiDirectoryNode" />
+            </path>
           </expand>
           <select />
         </subPane>
@@ -205,7 +222,6 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1440" height="900" extended-state="0" />
-    <editor active="true" />
     <layout>
       <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.25216764" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
@@ -255,16 +271,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/kotlin/com/teatez/lms/data/MongoDriver.kt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="105">
-          <caret line="7" column="66" selection-start-line="7" selection-start-column="66" selection-end-line="7" selection-end-column="66" />
-          <folding>
-            <element signature="e#0#60#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="jar:///Library/Java/JavaVirtualMachines/jdk1.8.0_211.jdk/Contents/Home/src.zip!/java/nio/file/Path.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-8394">
@@ -293,6 +299,23 @@
           <folding>
             <element signature="e#29#217#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/kotlin/com/teatez/lms/data/MongoDriver.kt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="105">
+          <caret line="7" column="49" selection-start-line="7" selection-start-column="49" selection-end-line="7" selection-end-column="49" />
+          <folding>
+            <element signature="e#0#60#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/resources/testDb.json">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="225">
+          <caret line="15" column="6" selection-start-line="15" selection-start-column="6" selection-end-line="15" selection-end-column="6" />
         </state>
       </provider>
     </entry>
