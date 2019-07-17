@@ -8,7 +8,7 @@ class DbTest {
 
     class DbMock(override val sp: ScriptProvider, execFn: (s:Script) -> Any?): Db {
         override fun connect() {/*do nothing*/}
-        override fun <T> exec(s: Script): DbResponse<T, MrError> = exec(s)
+        override fun <T> exec(s: Script): DbResponse<T, MrError> = execFn(s)
     }
 
     class ScriptProviderMock: ScriptProvider (
@@ -25,12 +25,11 @@ class DbTest {
         override fun projectFor(p: Persistable): Script = pfFn(p)
     }
 
-    class ScriptMock(val s: String = ""): Script{
+    class ScriptMock(val s: String = ""): Script {
         override fun get(): String = s
     }
     
     @Test fun createTest() {
-        Db.
         assertEquals(MyBalls().sugma(s), b)
     }
 }

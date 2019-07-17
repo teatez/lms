@@ -9,68 +9,105 @@ interface Db {
 }
 
 interface ScriptProvider {
-    fun createFor(p: Persistable): Script
-    fun readFor(p: Persistable): Script
-    fun updateFor(p: Persistable): Script
-    fun deleteFor(p: Persistable): Script
-    fun projectFor(p: Persistable): Script
+    fun createFor(p: ValueContainer): Script
+    fun readFor(p: ValueContainer): Script
+    fun updateFor(p: ValueContainer): Script
+    fun deleteFor(p: ValueContainer): Script
+    fun projectFor(p: ValueContainer): Script
 }
 
 interface Script {
     fun get(): String
-    fun fill(p: Persistable)
+    fun fill(p: ValueContainer)
 }
 
 class MrPersistor<T: Any>(val db: Db){
-    private fun deconstruct(p: T): Persistable {
-        val props = p::class.declaredMemberProperties
-        val (ks,vs) = props.map {
-            prop ->
-                prop.name to prop.getter.call(p)
-        }.unzip()
-        return Persistable(ks, vs)
+    private fun deconstruct(obj: T): ValueContainer {
+        val name = obj::class.name
+        val props = obj::class.declaredMemberProperties
+        val vs = props.map {prop -> d(prop)}
+        return ValuePointer(name, vs)
     }
 
-    private fun classifyValue(v: Any): ValueContainer {
+    private tailrec fun d(prop: KProperty1): ValueContainer {
+        val v = classifyValue(prop.getter.call(obj))
+        if (v is ComplexValue) ValuePointer(prop.name, d(v))
+        else Vc(prop.name, v)
+    }
+
+    private fun classifyValue(v: Any): Value {
         when(v) {
-            is String -> StringV(v)
             is Int -> IntV(v)
             is Long -> LongV(v)
-            else -> BadValue()
+            is Short -> ShortV(v)
+            is Byte -> ByteV(v)
+            is Float -> FloatV(v)
+            is Double -> DoubleV(v)
+            is String -> StringV(v)
+            is Boolean -> BoolV(v)
+            else -> ComplexValue()
         }
     }
 
-    private var cs: Script? = null
-    fun create(p: T): DbResponse<T, MrError> {
-        handle(p, cs)
-    }
+    companion object MisterPersistor {
+        private var cs: Script? = null
+        private var rs: Script? = null
+        private var us: Script? = null
+        private var ds: Script? = null
+        private var ps: Script? = null
 
-    private var rs: Script? = null
-    fun read(p: T): DbResponse<T, MrError> {
-        handle(p, rs)
-    }
-
-    private fun handle(p: T, s: Script): DbResponse<T, MrError> {
-        val d = deconstruct(p)
-        if(s== null) {
-            s = db.sp.createFor(d) 
+        fun create(p: T): DbResponse<T, MrError> {
+            val d = deconstruct(p)
+            if(cs == null) cs = db.createFor(d)
+            db.exec(cs.fill(d))
         }
-        s.fill(d)
-        return db.exec<T>(cs)
+
+        fun read(p: T): DbResponse<T, MrError> {
+            val d = deconstruct(p)
+            if(rs == null) rs = db.readFor(d)
+            db.exec(cs.fill(d))
+        }
+
+        fun update(p: T): DbResponse<T, MrError> {
+            val d = deconstruct(p)
+            if(us == null) us = db.updateFor(d)
+            db.exec(us.fill(d))
+        }
+
+        fun delete(p: T): DbResponse<T, MrError> {
+            val d = deconstruct(p)
+            if(ds == null) ds = db.deleteFor(d)
+            db.exec(ds.fill(d))
+        }
+
+        fun project(p: T): DbResponse<T, MrError> {
+            val d = deconstruct(p)
+            if(ps == null) ps = db.projectFor(d)
+            db.exec(ps.fill(d)
+        }
     }
 }
 
 abstract ValueContainer {
-    class ValuePointer(val k: String, val v: ValueContainer): ValueContainer()
+    class ValuePointer(val k: String, val v: List[ValueContainer]): ValueContainer()
     class Vc(val k: String, val v: Value): ValueContainer()
     class BadV: ValueContiner()
 }
 
 abstract class Value {
-    inline class IntV(val v: Int): ValueContainer
-    inline class StringV(val v: String): ValueContainer
-    inline class LongV(val v: Long): ValueContainer
+    //numbericons
+    inline class IntV(val v: Int): Value
+    inline class LongV(val v: Long): Value
+    inline class ShortV(val v: Short): Value
+    inline class ByteV(val v: Byte): Value
+    inline class FloatV(val v: Float): Value
+    inline class DoubleV(val v: Double): Value
 
+    //water t
+    inline class StringV(val v: String): Value
+
+    //other stuff
+    inline class BoolV(val v: Boolean): Value
 }
 
 data class DbCreateError(override val code: String, override val message: String) : MrError
