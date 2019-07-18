@@ -10,5 +10,6 @@ repositories {
 dependencies {
     compile(kotlin("stdlib"))
     compile(kotlin("reflect"))
+    compile 'org.mongodb:mongodb-driver-sync:3.10.2'
     testImplementation("junit:junit:4.12")
 }
