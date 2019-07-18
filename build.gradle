@@ -1,15 +1,24 @@
-plugins {
-    kotlin("jvm") version "1.3.31" 
+buildscript {
+    ext.kotlin_version = '1.3.31'
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
 }
 
+apply plugin: 'kotlin'
+
 repositories {
-    jcenter() 
     mavenCentral()
 }
 
 dependencies {
-    compile(kotlin("stdlib"))
-    compile(kotlin("reflect"))
-    compile 'org.mongodb:mongodb-driver-sync:3.10.2'
-    testImplementation("junit:junit:4.12")
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    compile 'org.mongodb:mongodb-driver:3.6.3'
+    implementation "org.jetbrains.kotlin:kotlin-reflect"
+
+    testCompile 'junit:junit:4.12'
+    testCompile "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
 }
