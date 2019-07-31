@@ -2,34 +2,34 @@ package com.teatez.lms.data
 
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import kotlin.reflect.*
+import kotlin.reflect.full.*
 
 class DbTest {
-    data class TestClass(just: String, testing: Int, deconstruction: String)
+    data class Balls(val sacks: String, val shit: Int, var stuff: String): Persistable()
 
-    class DbMock(override val sp: ScriptProvider, execFn: (s:Script) -> Any?): Db {
-        override fun connect() {/*do nothing*/}
-        override fun <T> exec(s: Script): DbResponse<T, MrError> = execFn(s)
+    class MockDb: Db {
+        override val sp: ScriptProvider = MockScriptProvider()
+        override fun connect() = println("connect")
+        override fun <T> exec(s: Script): DbResponse<T, MrError> = Success("yay" as T)
     }
 
-    class ScriptProviderMock: ScriptProvider (
-        val cfFn: (Persistable) -> Script = (p) -> ScriptMock()
-        val rfFn: (Persistable) -> Script = (p) -> ScriptMock()
-        val ufFn: (Persistable) -> Script = (p) -> ScriptMock()
-        val dfFn: (Persistable) -> Script = (p) -> ScriptMock()
-        val pfFn: (Persistable) -> Script = (p) -> ScriptMock()
-    ){
-        override fun createFor(p: Persistable): Script = cfFn(p)
-        override fun readFor(p: Persistable): Script = rfFn(p)
-        override fun updateFor(p: Persistable): Script = ufFn(p)
-        override fun deleteFor(p: Persistable): Script = dfFn(p)
-        override fun projectFor(p: Persistable): Script = pfFn(p)
+    class MockScriptProvider: ScriptProvider {
+        var createForFn: (ValueContainer)->Script =  {vc: ValueContainer -> println(vc); MockScript()}
+        override fun createFor(vc: ValueContainer): Script = createForFn(vc)
+        override fun readFor(vc: ValueContainer): Script = MockScript()
+        override fun updateFor(vc: ValueContainer): Script = MockScript()
+        override fun deleteFor(vc: ValueContainer): Script = MockScript()
+        override fun projectFor(vc: ValueContainer): Script = MockScript()
     }
 
-    class ScriptMock(val s: String = ""): Script {
-        override fun get(): String = s
+    class MockScript: Script {
+        override fun get(): String = "script"
+        override fun fill(p: ValueContainer): Script = this
     }
-    
+
     @Test fun createTest() {
-        assertEquals(MyBalls().sugma(s), b)
+        val mp = MrPersistor<Balls>(MockDb())
+        mp.create(Balls("hehe",1,"haha"))
     }
 }
