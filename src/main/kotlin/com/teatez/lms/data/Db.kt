@@ -20,23 +20,26 @@ interface ScriptProvider {
 
 interface Script {
     fun get(): String
-    fun fill(p: ValueContainer): Script
+    fun addValue(p: ValueContainer): Script
 }
 
 abstract class Persistable
 class MrPersistor<T: Persistable>(val db: Db){
      
-    private fun reflectTo(o: Any) = o::class.simpleName to o::class.declaredMemberProperties
-    private fun deconstruct(obj: T): ValueContainer? {
-        val (name, props) = reflectTo(obj)
-        val vs = props.map {
-            prop -> 
-                val value = prop.getter.call(obj)
-                val v = classifyValue(value)
-                if (v is ComplexV) deconstruct(obj)
-                else Vc(prop.name, v)
+    private fun reflectTo(o: Any) = Triple(o::class.simpleName ?: "no name", o::class.declaredMemberProperties, o)
+    private fun deconstruct(name: String, props: Collection<KProperty1<*, *>>, rcvr: Any): ValueContainer {
+        val vcs = props.map {
+            p ->
+                val value = classifyValue(p.getter.call(rcvr))
+                when (value) {
+                    is ComplexV -> {
+                        val (n, ps, r) = reflectTo(value.v)
+                        deconstruct(n, ps, r)
+                    }
+                    else -> Vc(p.name, value)
+                }
         }
-        return name?.let {name -> vs?.let { vs -> ListContainer(name, vs)}} //worlds ugliest double null check
+        return ListContainer(name, vcs)
     }
 
     private fun classifyValue(v: Any?): Value {
@@ -50,7 +53,7 @@ class MrPersistor<T: Persistable>(val db: Db){
             is String  -> StringV(v)
             is Boolean -> BoolV(v)
             null    -> NullV
-            else -> ComplexV
+            else -> ComplexV(v)
         }
         return v
     }
@@ -62,37 +65,42 @@ class MrPersistor<T: Persistable>(val db: Db){
     private var ps: Script? = null
 
     fun create(p: T): DbResponse<T, MrError> {
-        val d = deconstruct(p) ?: return Failure(DeconstructError("code", "couldn't deconstruct your object my dude"))
+        val (name, props, reciever) = reflectTo(p)
+        val d = deconstruct(name, props, reciever)
         val s = cs ?: db.sp.createFor(d)
-        val fs = s.fill(d)
+        val fs = s.addValue(d)
         return db.exec(fs)
     }
 
     fun read(p: T): DbResponse<T, MrError> {
-        val d = deconstruct(p) ?: return Failure(DeconstructError("code", "couldn't deconstruct your object my dude"))
+        val (name, props, reciever) = reflectTo(p)
+        val d = deconstruct(name, props, reciever)
         val s = rs ?: db.sp.readFor(d)
-        val fs = s.fill(d)
+        val fs = s.addValue(d)
         return db.exec(fs)
     }
 
     fun update(p: T): DbResponse<T, MrError> {
-        val d = deconstruct(p) ?: return Failure(DeconstructError("code", "couldn't deconstruct your object my dude"))
+        val (name, props, reciever) = reflectTo(p)
+        val d = deconstruct(name, props, reciever)
         val s = us ?: db.sp.updateFor(d)
-        val fs = s.fill(d)
+        val fs = s.addValue(d)
         return db.exec(fs)
     }
 
     fun delete(p: T): DbResponse<T, MrError> {
-        val d = deconstruct(p) ?: return Failure(DeconstructError("code", "couldn't deconstruct your object my dude"))
+        val (name, props, reciever) = reflectTo(p)
+        val d = deconstruct(name, props, reciever)
         val s = ds ?: db.sp.deleteFor(d)
-        val fs = s.fill(d)
+        val fs = s.addValue(d)
         return db.exec(fs)
     }
 
     fun project(p: T): DbResponse<T, MrError> {
-        val d = deconstruct(p) ?: return Failure(DeconstructError("code", "couldn't deconstruct your object my dude"))
+        val (name, props, reciever) = reflectTo(p)
+        val d = deconstruct(name, props, reciever)
         val s = ps ?: db.sp.projectFor(d)
-        val fs = s.fill(d)
+        val fs = s.addValue(d)
         return db.exec(fs)
     }
 }
@@ -103,7 +111,7 @@ data class Vc(val k: String, val v: Value): ValueContainer()
 data class ListContainer(val k: String, val v: List<ValueContainer?>): ValueContainer()
 object BadV: ValueContainer()
 
-sealed class Value 
+sealed class Value
 //numbericons
 data class IntV(val v: Int): Value()
 data class LongV(val v: Long): Value()
@@ -113,11 +121,11 @@ data class FloatV(val v: Float): Value()
 data class DoubleV(val v: Double): Value()
 
 //water t
-class StringV(val v: String): Value()
+data class StringV(val v: String): Value()
 
 //other stuff
-class BoolV(val v: Boolean): Value()
-object ComplexV: Value()
+data class BoolV(val v: Boolean): Value()
+data class ComplexV(val v: Any): Value()
 object NullV: Value()
 
 sealed class MrError {
