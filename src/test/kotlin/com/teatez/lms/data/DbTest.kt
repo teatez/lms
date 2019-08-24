@@ -6,7 +6,7 @@ import kotlin.reflect.*
 import kotlin.reflect.full.*
 
 class DbTest {
-    data class Balls(val sacks: String, val shit: Int, var stuff: String): Persistable()
+    data class Balls(val sacks: String, val shit: Int, var stuff: String): MPPersistable()
 
     class MockDb(val osp: ScriptProvider = MockScriptProvider()): Db {
         override val sp: ScriptProvider = osp
@@ -42,7 +42,7 @@ class DbTest {
     }
 
     data class TestAddr(val city: String, val state: String, val zip: String, val street: String)
-    data class TestPerson(val name: String, val age: Int, val addr: TestAddr): Persistable()
+    data class TestPerson(val name: String, val age: Int, val addr: TestAddr): MPPersistable()
     @Test fun deconstructorSimpleTest() {
         val tp = TestPerson("jimbo slimbo", 200, TestAddr("columbus", "ohio", "43202", "123 ligma ave"))
 
