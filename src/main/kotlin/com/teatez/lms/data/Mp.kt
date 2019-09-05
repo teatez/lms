@@ -43,31 +43,33 @@ class MrPersistor<T: MPPersistable>(val db: Db){
         return value
     }
 
-    fun perform(p: T, getScript: (Db,ValueContainer) -> Script): DbResponse<T, MrError> {
+    fun perform(p: T, getScript: (Db,ValueContainer) -> Script): DbResponse {
         val (name, props, reciever) = reflectTo(p)
         val valueContainer = deconstruct(name, props, reciever)
+        val es = reduce2Errors(valueContainer)
+        if(es.isNotEmpty()) return Failure(es)
         val emptyScript = getScript(db, valueContainer)
         val scriptWithValues = emptyScript.addValue(valueContainer)
         return db.exec(scriptWithValues)
     }
 
-    fun create(p: T): DbResponse<T, MrError> {
+    fun create(p: T): DbResponse {
         return perform(p, ::getCreateScript)
     }
 
-    fun read(p: T): DbResponse<T, MrError> {
+    fun read(p: T): DbResponse {
         return perform(p, ::getReadScript)
     }
 
-    fun update(p: T): DbResponse<T, MrError> {
+    fun update(p: T): DbResponse {
         return perform(p, ::getUpdateScript)
     }
 
-    fun delete(p: T): DbResponse<T, MrError> {
+    fun delete(p: T): DbResponse {
         return perform(p, ::getDeleteScript)
     }
 
-    fun project(p: T): DbResponse<T, MrError> {
+    fun project(p: T): DbResponse {
         return perform(p, ::getProjectScript)
     }
 
@@ -83,15 +85,13 @@ class MrPersistor<T: MPPersistable>(val db: Db){
         fun getUpdateScript(db: Db, vc: ValueContainer): Script = us.getOrPut(vc.k, {db.sp.updateFor(vc)})
         fun getDeleteScript(db: Db, vc: ValueContainer): Script = ds.getOrPut(vc.k, {db.sp.deleteFor(vc)})
         fun getProjectScript(db: Db, vc: ValueContainer): Script = ps.getOrPut(vc.k, {db.sp.projectFor(vc)})
-    }
-}
 
-object MpUtils {
-    fun reduce2Errors(vc: ValueContainer): List<MrError> {
-        return when(vc) {
-            is ListContainer -> vc.v.flatMap {value -> reduce2Errors(value)}
-            is BadVc -> listOf(DeconstructError("MP1", "Bad Value Encountered: k=${vc.k} v=${vc.v}"))
-            is Vc -> emptyList()
+        fun reduce2Errors(vc: ValueContainer): List<MrError> {
+            return when(vc) {
+                is ListContainer -> vc.v.flatMap {value -> reduce2Errors(value)}
+                is BadVc -> listOf(DeconstructError("MP1", "Bad Value Encountered: k=${vc.k} v=${vc.v}"))
+                is Vc -> emptyList()
+            }
         }
     }
 }
@@ -134,7 +134,7 @@ data class DbDeleteError(override val code: String, override val message: String
 data class ScriptFillError(override val code: String, override val message: String) : MrError()
 data class DeconstructError(override val code: String, override val message: String) : MrError()
 
-sealed class DbResponse<out S,out F>
-data class Success<S>(val value: S): DbResponse<S,Nothing>()
-data class Failure(val error: MrError): DbResponse<Nothing,MrError>()
+sealed class DbResponse
+data class Success<S>(val value: S): DbResponse()
+data class Failure<F>(val error: List<F>): DbResponse()
 

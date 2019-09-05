@@ -3,7 +3,7 @@ package com.teatez.lms.data
 interface Db {
     val sp: ScriptProvider
     fun connect()
-    fun <T> exec(s: Script): DbResponse<T, MrError>
+    fun exec(s: Script): DbResponse
 }
 
 interface ScriptProvider {

@@ -11,7 +11,7 @@ class DbTest {
     class MockDb(val osp: ScriptProvider = MockScriptProvider()): Db {
         override val sp: ScriptProvider = osp
         override fun connect() = println("connect")
-        override fun <T> exec(s: Script): DbResponse<T, MrError> = Success("yay" as T)
+        override fun exec(s: Script): DbResponse = Success("yay")
     }
 
     class MockScriptProvider: ScriptProvider {
@@ -69,12 +69,9 @@ class DbTest {
         val subject = TestOuter("junk", TestInner("moreJunk"))
 
         val sp = MockScriptProvider()
-        var target: ValueContainer? = null
-        sp.createForFn = {vc -> target = vc; MockScript()}
         val mp = MrPersistor<TestOuter>(MockDb(sp))
-        mp.create(subject)
-        assertEquals(target, 
-            ListContainer("TestOuter", listOf(BadVc("inside", TestInner("moreJunk")),Vc("junk",StringV("junk"))))
-        )
+        val result = mp.create(subject)
+        assertEquals(Failure(listOf(DeconstructError("MP1","Bad Value Encountered: k=inside v=TestInner(moreJunk=moreJunk)"))), result)
+
     }
 }
