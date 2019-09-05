@@ -19,6 +19,7 @@ class MrPersistor<T: MPPersistable>(val db: Db){
                         val (n, ps, r) = reflectTo(value.v)
                         deconstruct(n, ps, r)
                     }
+                    is BadV -> BadVc(p.name, value.v)
                     else -> Vc(p.name, value)
                 }
         }
@@ -35,8 +36,9 @@ class MrPersistor<T: MPPersistable>(val db: Db){
             is Double  -> DoubleV(v)
             is String  -> StringV(v)
             is Boolean -> BoolV(v)
+            is MPPersistable -> ComplexV(v)
             null    -> NullV
-            else -> ComplexV(v)
+            else -> BadV(v)
         }
         return value
     }
@@ -84,13 +86,22 @@ class MrPersistor<T: MPPersistable>(val db: Db){
     }
 }
 
+object MpUtils {
+    fun reduce2Errors(vc: ValueContainer): List<MrError> {
+        return when(vc) {
+            is ListContainer -> vc.v.flatMap {value -> reduce2Errors(value)}
+            is BadVc -> listOf(DeconstructError("MP1", "Bad Value Encountered: k=${vc.k} v=${vc.v}"))
+            is Vc -> emptyList()
+        }
+    }
+}
+
 sealed class ValueContainer {
     abstract val k: String
 }
-data class ValuePointer(override val k: String, val v: ValueContainer): ValueContainer()
 data class Vc(override val k: String, val v: Value): ValueContainer()
-data class ListContainer(override val k: String, val v: List<ValueContainer?>): ValueContainer()
-data class BadV(override val k: String): ValueContainer()
+data class ListContainer(override val k: String, val v: List<ValueContainer>): ValueContainer()
+data class BadVc(override val k: String, val v: Any): ValueContainer()
 
 sealed class Value
 //numbericons
@@ -107,6 +118,9 @@ data class StringV(val v: String): Value()
 //other stuff
 data class BoolV(val v: Boolean): Value()
 data class ComplexV(val v: Any): Value()
+data class ListV(val v: List<*>): Value()
+data class SetV(val v: Set<*>): Value()
+data class BadV(val v: Any): Value()
 object NullV: Value()
 
 sealed class MrError {

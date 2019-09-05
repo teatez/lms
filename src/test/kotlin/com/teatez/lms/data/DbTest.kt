@@ -41,7 +41,7 @@ class DbTest {
                 Vc("stuff", StringV("haha")))))
     }
 
-    data class TestAddr(val city: String, val state: String, val zip: String, val street: String)
+    data class TestAddr(val city: String, val state: String, val zip: String, val street: String): MPPersistable()
     data class TestPerson(val name: String, val age: Int, val addr: TestAddr): MPPersistable()
     @Test fun deconstructorSimpleTest() {
         val tp = TestPerson("jimbo slimbo", 200, TestAddr("columbus", "ohio", "43202", "123 ligma ave"))
@@ -61,5 +61,20 @@ class DbTest {
                 Vc("age", IntV(200)),
                 Vc("name", StringV("jimbo slimbo"))
             )))
+    }
+
+    data class TestInner(val moreJunk: String)
+    data class TestOuter(val junk: String, val inside: TestInner): MPPersistable()
+    @Test fun deconstructorErrorTest() {
+        val subject = TestOuter("junk", TestInner("moreJunk"))
+
+        val sp = MockScriptProvider()
+        var target: ValueContainer? = null
+        sp.createForFn = {vc -> target = vc; MockScript()}
+        val mp = MrPersistor<TestOuter>(MockDb(sp))
+        mp.create(subject)
+        assertEquals(target, 
+            ListContainer("TestOuter", listOf(BadVc("inside", TestInner("moreJunk")),Vc("junk",StringV("junk"))))
+        )
     }
 }
