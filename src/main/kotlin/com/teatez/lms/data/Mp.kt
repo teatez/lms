@@ -1,26 +1,25 @@
 package com.teatez.lms.data
 
-import kotlin.reflect.full.*
-import kotlin.reflect.*
-
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
 
-abstract class MPPersistable
+interface MPPersistable {
+    fun fields(): Map<String, Any>
+    fun me(): String //a name you call yourself
+}
 class MrPersistor<T: MPPersistable>(val db: Db){
-     
-    private fun reflectTo(o: Any) = Triple(o::class.simpleName ?: "no name", o::class.declaredMemberProperties, o)
-    private fun deconstruct(name: String, props: Collection<KProperty1<*, *>>, rcvr: Any): ValueContainer {
+    private fun reflectTo(o: MPPersistable) = Pair(o.me() ?: "no name", o.fields())
+    private fun deconstruct(name: String, props: Map<String, Any>): ValueContainer {
         val vcs = props.map {
             p ->
-                val value = classifyValue(p.getter.call(rcvr))
+                val value = classifyValue(p.value)
                 when (value) {
                     is ComplexV -> {
-                        val (n, ps, r) = reflectTo(value.v)
-                        deconstruct(n, ps, r)
+                        val (n, ps) = reflectTo(value.v)
+                        deconstruct(n, ps)
                     }
-                    is BadV -> BadVc(p.name, value.v)
-                    else -> Vc(p.name, value)
+                    is BadV -> BadVc(p.key, value.v)
+                    else -> Vc(p.key, value)
                 }
         }
         return ListContainer(name, vcs)
@@ -44,8 +43,8 @@ class MrPersistor<T: MPPersistable>(val db: Db){
     }
 
     fun perform(p: T, getScript: (Db,ValueContainer) -> Script): DbResponse {
-        val (name, props, reciever) = reflectTo(p)
-        val valueContainer = deconstruct(name, props, reciever)
+        val (name, props) = reflectTo(p)
+        val valueContainer = deconstruct(name, props)
         val es = reduce2Errors(valueContainer)
         if(es.isNotEmpty()) return Failure(es)
         val emptyScript = getScript(db, valueContainer)
@@ -117,7 +116,7 @@ data class StringV(val v: String): Value()
 
 //other stuff
 data class BoolV(val v: Boolean): Value()
-data class ComplexV(val v: Any): Value()
+data class ComplexV(val v: MPPersistable): Value()
 data class ListV(val v: List<*>): Value()
 data class SetV(val v: Set<*>): Value()
 data class BadV(val v: Any): Value()

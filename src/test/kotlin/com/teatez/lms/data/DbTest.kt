@@ -2,12 +2,13 @@ package com.teatez.lms.data
 
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import kotlin.reflect.*
-import kotlin.reflect.full.*
 
 class DbTest {
-    data class Balls(val sacks: String, val shit: Int, var stuff: String): MPPersistable()
+    data class Balls(val sacks: String, val shit: Int, var stuff: String): MPPersistable {
+        override fun me(): String = "Balls"
+        override fun fields(): Map<String, Any> = mapOf("sacks" to sacks, "shit" to shit, "stuff" to stuff)
 
+    }
     class MockDb(val osp: ScriptProvider = MockScriptProvider()): Db {
         override val sp: ScriptProvider = osp
         override fun connect() = println("connect")
@@ -41,8 +42,15 @@ class DbTest {
                 Vc("stuff", StringV("haha")))))
     }
 
-    data class TestAddr(val city: String, val state: String, val zip: String, val street: String): MPPersistable()
-    data class TestPerson(val name: String, val age: Int, val addr: TestAddr): MPPersistable()
+    data class TestAddr(val city: String, val state: String, val zip: String, val street: String): MPPersistable {
+        override fun me(): String = "TestAddr"
+        override fun fields(): Map<String, Any> = mapOf("city" to city, "state" to state, "zip" to zip, "street" to street)
+    }
+    data class TestPerson(val name: String, val age: Int, val addr: TestAddr): MPPersistable {
+        override fun me(): String = "TestPerson"
+        override fun fields(): Map<String, Any> = mapOf("name" to name, "age" to age, "addr" to addr)
+    }
+
     @Test fun deconstructorSimpleTest() {
         val tp = TestPerson("jimbo slimbo", 200, TestAddr("columbus", "ohio", "43202", "123 ligma ave"))
 
@@ -53,18 +61,20 @@ class DbTest {
         mp.create(tp)
         assertEquals(target, 
             ListContainer("TestPerson", listOf(
+                Vc("name", StringV("jimbo slimbo")),
+                Vc("age", IntV(200)),
                 ListContainer("TestAddr", listOf(
                     Vc("city", StringV("columbus")), 
                     Vc("state", StringV("ohio")), 
-                    Vc("street", StringV("123 ligma ave")),
-                    Vc("zip", StringV("43202")))),
-                Vc("age", IntV(200)),
-                Vc("name", StringV("jimbo slimbo"))
-            )))
+                    Vc("zip", StringV("43202")),
+                    Vc("street", StringV("123 ligma ave")))))))
     }
 
     data class TestInner(val moreJunk: String)
-    data class TestOuter(val junk: String, val inside: TestInner): MPPersistable()
+    data class TestOuter(val junk: String, val inside: TestInner): MPPersistable {
+        override fun me(): String = "TestOuter"
+        override fun fields(): Map<String, Any> = mapOf("junk" to junk, "inside" to inside)
+    }
     @Test fun deconstructorErrorTest() {
         val subject = TestOuter("junk", TestInner("moreJunk"))
 
