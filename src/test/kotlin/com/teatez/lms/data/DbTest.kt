@@ -70,6 +70,44 @@ class DbTest {
                     Vc("street", StringV("123 ligma ave")))))))
     }
 
+    data class TestPersons(val l: List<TestPerson>): MPPersistable {
+        override fun me(): String = "TestPersons"
+        override fun fields(): Map<String, Any> = mapOf("l" to l)
+    }
+    @Test fun deconstructorSimpleListTest() {
+        val tp = TestPersons(listOf(TestPerson("jimbo slimbo", 200, TestAddr("columbus", "ohio", "43202", "123 ligma ave")),
+                                    TestPerson("Lecarpatron Dukemarriot", 25, TestAddr("space", "station", "99999", "milky way"))))
+
+        val sp = MockScriptProvider()
+        var target: ValueContainer? = null
+        sp.createForFn = {vc -> target = vc; MockScript()}
+        val mp = MrPersistor<TestPersons>(MockDb(sp))
+        mp.create(tp)
+        assertEquals(target, 
+            ValuePointer("TestPersons", listOf(
+                    ValuePointer("l", listOf(
+                        ValuePointer("TestPerson", listOf(
+                            Vc("name", StringV("jimbo slimbo")),
+                            Vc("age", IntV(200)),
+                            ValuePointer("TestAddr", listOf(
+                                Vc("city", StringV("columbus")), 
+                                Vc("state", StringV("ohio")), 
+                                Vc("zip", StringV("43202")),
+                                Vc("street", StringV("123 ligma ave")))))),
+                        ValuePointer("TestPerson", listOf(
+                            Vc("name", StringV("Lecarpatron Dukemarriot")),
+                            Vc("age", IntV(25)),
+                            ValuePointer("TestAddr", listOf(
+                                Vc("city", StringV("space")), 
+                                Vc("state", StringV("station")), 
+                                Vc("zip", StringV("99999")),
+                                Vc("street", StringV("milky way"))))))
+
+                    ))
+            ))
+        )
+    }
+
     data class TestInner(val moreJunk: String)
     data class TestOuter(val junk: String, val inside: TestInner): MPPersistable {
         override fun me(): String = "TestOuter"

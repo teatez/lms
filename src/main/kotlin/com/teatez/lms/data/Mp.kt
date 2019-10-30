@@ -14,6 +14,7 @@ class MrPersistor<T: MPPersistable>(val db: Db){
             is ListV -> ValuePointer(n, v.v.map {x -> decomp(null, classifyValue(x))})
             is ComplexV -> ValuePointer(v.v.me(), v.v.fields().map {x -> decomp(x.key, classifyValue(x.value))})
             else -> Vc(n, v)
+
         }
         return res
     }
@@ -28,6 +29,7 @@ class MrPersistor<T: MPPersistable>(val db: Db){
             is Double  -> DoubleV(v)
             is String  -> StringV(v)
             is Boolean -> BoolV(v)
+            is List<*>   -> ListV(v)
             is MPPersistable -> ComplexV(v)
             null    -> NullV
             else -> BadV(v)
