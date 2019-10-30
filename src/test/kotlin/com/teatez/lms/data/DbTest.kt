@@ -36,7 +36,7 @@ class DbTest {
         val mp = MrPersistor<Balls>(MockDb(sp))
         mp.create(Balls("hehe",1,"haha"))
         assertEquals(target, 
-            ListContainer("Balls", listOf(
+            ValuePointer("Balls", listOf(
                 Vc("sacks", StringV("hehe")), 
                 Vc("shit", IntV(1)), 
                 Vc("stuff", StringV("haha")))))
@@ -60,10 +60,10 @@ class DbTest {
         val mp = MrPersistor<TestPerson>(MockDb(sp))
         mp.create(tp)
         assertEquals(target, 
-            ListContainer("TestPerson", listOf(
+            ValuePointer("TestPerson", listOf(
                 Vc("name", StringV("jimbo slimbo")),
                 Vc("age", IntV(200)),
-                ListContainer("TestAddr", listOf(
+                ValuePointer("TestAddr", listOf(
                     Vc("city", StringV("columbus")), 
                     Vc("state", StringV("ohio")), 
                     Vc("zip", StringV("43202")),

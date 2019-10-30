@@ -8,21 +8,14 @@ interface MPPersistable {
     fun me(): String //a name you call yourself
 }
 class MrPersistor<T: MPPersistable>(val db: Db){
-    private fun reflectTo(o: MPPersistable) = Pair(o.me() ?: "no name", o.fields())
-    private fun deconstruct(name: String, props: Map<String, Any>): ValueContainer {
-        val vcs = props.map {
-            p ->
-                val value = classifyValue(p.value)
-                when (value) {
-                    is ComplexV -> {
-                        val (n, ps) = reflectTo(value.v)
-                        deconstruct(n, ps)
-                    }
-                    is BadV -> BadVc(p.key, value.v)
-                    else -> Vc(p.key, value)
-                }
+    private fun decomp(n: String?, v: Value): ValueContainer {
+        val res = when (v) {
+            is BadV -> BadVc(n, v.v)
+            is ListV -> ValuePointer(n, v.v.map {x -> decomp(null, classifyValue(x))})
+            is ComplexV -> ValuePointer(v.v.me(), v.v.fields().map {x -> decomp(x.key, classifyValue(x.value))})
+            else -> Vc(n, v)
         }
-        return ListContainer(name, vcs)
+        return res
     }
 
     private fun classifyValue(v: Any?): Value {
@@ -43,8 +36,7 @@ class MrPersistor<T: MPPersistable>(val db: Db){
     }
 
     fun perform(p: T, getScript: (Db,ValueContainer) -> Script): DbResponse {
-        val (name, props) = reflectTo(p)
-        val valueContainer = deconstruct(name, props)
+        val valueContainer = decomp(p.me(), classifyValue(p))
         val es = reduce2Errors(valueContainer)
         if(es.isNotEmpty()) return Failure(es)
         val emptyScript = getScript(db, valueContainer)
@@ -87,7 +79,7 @@ class MrPersistor<T: MPPersistable>(val db: Db){
 
         fun reduce2Errors(vc: ValueContainer): List<MrError> {
             return when(vc) {
-                is ListContainer -> vc.v.flatMap {value -> reduce2Errors(value)}
+                is ValuePointer -> vc.v.flatMap {value -> reduce2Errors(value)}
                 is BadVc -> listOf(DeconstructError("MP1", "Bad Value Encountered: k=${vc.k} v=${vc.v}"))
                 is Vc -> emptyList()
             }
@@ -96,11 +88,11 @@ class MrPersistor<T: MPPersistable>(val db: Db){
 }
 
 sealed class ValueContainer {
-    abstract val k: String
+    abstract val k: String?
 }
-data class Vc(override val k: String, val v: Value): ValueContainer()
-data class ListContainer(override val k: String, val v: List<ValueContainer>): ValueContainer()
-data class BadVc(override val k: String, val v: Any): ValueContainer()
+data class Vc(override val k: String?, val v: Value): ValueContainer()
+data class ValuePointer(override val k: String?, val v: List<ValueContainer>): ValueContainer()
+data class BadVc(override val k: String?, val v: Any): ValueContainer() 
 
 sealed class Value
 //numbericons
@@ -119,6 +111,7 @@ data class BoolV(val v: Boolean): Value()
 data class ComplexV(val v: MPPersistable): Value()
 data class ListV(val v: List<*>): Value()
 data class SetV(val v: Set<*>): Value()
+data class MapV(val v: Map<*,*>)
 data class BadV(val v: Any): Value()
 object NullV: Value()
 
